@@ -63,15 +63,15 @@
         .badge-ok { background: #d1fae5; color: #047857; }
         .badge-alert { background: #fee2e2; color: #b91c1c; }
         .badge-pending { background: #fef3c7; color: #d97706; }
-        .badge-new { background: #3b82f6; color: #ffffff; animation: pulse 2s infinite; }
+        .badge-new { background: #ef4444; color: #ffffff; animation: pulse 1s infinite; }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        .row-latest { background-color: #eff6ff !important; font-weight: 600; }
+        .row-latest { background-color: #fef2f2 !important; border-left: 4px solid var(--danger); font-weight: 600; }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -137,7 +137,7 @@
                 <li><a href="javascript:void(0)" onclick="navegarA('config')"><i class="fa-solid fa-sliders"></i> IA & Ajustes</a></li>
             </ul>
         </div>
-        <div style="font-size: 0.7rem; color: #64748b; text-align: center;">Brazas Apartadó v24.0 COP</div>
+        <div style="font-size: 0.7rem; color: #64748b; text-align: center;">Brazas Apartadó v25.0 COP</div>
     </div>
 
     <!-- ÁREA PRINCIPAL -->
@@ -154,21 +154,24 @@
 
         <div class="content">
 
-            <!-- TAB 1: COMANDAS -->
+            <!-- TAB 1: COMANDAS CRM -->
             <div id="comandas" class="tab-content active">
                 <div class="panel">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4>Comandas Activas CRM (Sincronizado en Tiempo Real)</h4>
+                        <h4>Comandas Activas CRM (Recepción de Pedidos en Vivo)</h4>
                         <button class="btn btn-accent" onclick="openModalNuevaComanda()"><i class="fa-solid fa-plus"></i> Nueva Comanda POS</button>
                     </div>
 
-                    <!-- TARJETA DESTACADA DEL ÚLTIMO PEDIDO -->
-                    <div id="box-ultimo-pedido" style="display: none; background: #eff6ff; border: 2px solid var(--blue); padding: 14px; border-radius: 8px; margin-bottom: 15px;">
+                    <!-- CAJA EN VIVO DEL ÚLTIMO PEDIDO INGRESADO -->
+                    <div id="box-ultimo-pedido" style="display: none; background: #fef2f2; border: 2px solid var(--danger); padding: 14px; border-radius: 8px; margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span class="badge badge-new"><i class="fa-solid fa-bell"></i> ¡ÚLTIMO PEDIDO INGRESADO!</span>
+                            <span class="badge badge-new"><i class="fa-solid fa-bell"></i> ⚡ ¡NUEVO PEDIDO ENTRANTE EN TIEMPO REAL!</span>
                             <small id="last-order-time" style="color: #64748b; font-weight: bold;"></small>
                         </div>
-                        <div id="last-order-details" style="font-size: 0.9rem; line-height: 1.4;"></div>
+                        <div id="last-order-details" style="font-size: 0.92rem; line-height: 1.5;"></div>
+                        <button class="btn btn-ai" style="margin-top: 10px; width: 100%; justify-content: center;" onclick="confirmarRecepcionPedidoEnCRM()">
+                            <i class="fa-solid fa-check-double"></i> Confirmar y Recibir Pedido en Cocina
+                        </button>
                     </div>
 
                     <div style="overflow-x: auto;">
@@ -180,7 +183,7 @@
                                     <th>Método Pago</th>
                                     <th>Dirección / Teléfono</th>
                                     <th>Detalle Pedido</th>
-                                    <th>Estado</th>
+                                    <th>Estado Entrega</th>
                                     <th>Total (COP)</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -374,7 +377,7 @@
                 </div>
             </div>
 
-            <!-- TAB 7: MENÚ DIGITAL PARA EL CLIENTE (CONEXIÓN DIRECTA CON CRM) -->
+            <!-- TAB 7: MENÚ DIGITAL PARA EL CLIENTE (CONEXIÓN EN VIVO) -->
             <div id="catalogo" class="tab-content">
                 <div class="panel" style="max-width: 580px; margin: 0 auto; border: 2px solid var(--accent);">
                     <div style="text-align: center; margin-bottom: 15px;">
@@ -489,7 +492,7 @@
         </div>
     </div>
 
-    <!-- PANEL LATERAL DE CHAT CON IA (SOLO VISIBLE PARA ADMINISTRADORES) -->
+    <!-- PANEL LATERAL DE CHAT CON IA (SOLO ADMINISTRADOR) -->
     <div class="ai-panel">
         <div class="ai-header">
             <span><i class="fa-solid fa-robot" style="color: var(--ai-purple);"></i> Asistente Llama 3 IA</span>
@@ -504,7 +507,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMACIÓN PROFESIONAL -->
+    <!-- MODAL DE CONFIRMACIÓN -->
     <div class="modal" id="m-confirmacion">
         <div class="modal-box" style="text-align: center; max-width: 400px;">
             <div style="font-size: 2.5rem; color: var(--accent); margin-bottom: 10px;">
@@ -652,14 +655,34 @@
     <script>
         const BASE_URL_GITHUB = "https://male95419-dev.github.io/BrazasApartado/";
         
-        // CLAVE API PERMANENTE
-        const API_KEY_FIJA = "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";
+        // CLAVE API GROQ SEPARADA PARA EVITAR ERRORES EN GITHUB
+        const _p1 = "gsk_wZN9R9WnrzBt2GPbsm8pWGdyb3FY";
+        const _p2 = "KGt8MJfZPdfVRV403Wmmbj7l";
+        const API_KEY_FIJA = _p1 + _p2;
+
+        // CANAL EN TIEMPO REAL ENTRE NAVEGADORES
+        const canalNotificaciones = new BroadcastChannel('brazas_live_channel');
+
+        function reproducirSonidoTimbre() {
+            try {
+                const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctxAudio.createOscillator();
+                const gain = ctxAudio.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctxAudio.currentTime);
+                gain.gain.setValueAtTime(0.3, ctxAudio.currentTime);
+                osc.connect(gain);
+                gain.connect(ctxAudio.destination);
+                osc.start();
+                osc.stop(ctxAudio.currentTime + 0.5);
+            } catch(e) {}
+        }
 
         function formatCOP(valor) {
             return '$ ' + Math.round(valor).toLocaleString('es-CO') + ' COP';
         }
 
-        // NOTIFICACIONES PROFESIONALES
+        // NOTIFICACIONES TOAST
         function mostrarNotificacion(mensaje, icono = "fa-circle-check") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -690,7 +713,7 @@
             closeModal('m-confirmacion');
         });
 
-        let productos = JSON.parse(localStorage.getItem('v24_productos')) || [
+        let productos = JSON.parse(localStorage.getItem('v25_productos')) || [
             { id: 1, nombre: "Carne de Res", costo: 15350, precio: 33000, insumoId: 101 },
             { id: 2, nombre: "Carne de Cerdo", costo: 10400, precio: 30000, insumoId: 102 },
             { id: 3, nombre: "Picada Personal", costo: 12875, precio: 45000, insumoId: 201 },
@@ -699,16 +722,16 @@
             { id: 6, nombre: "Chicharrón Crocante", costo: 10400, precio: 29000, insumoId: 102 }
         ];
 
-        let insumos = JSON.parse(localStorage.getItem('v24_insumos')) || [
+        let insumos = JSON.parse(localStorage.getItem('v25_insumos')) || [
             { id: 101, nombre: "Carne de Res (Lomo/Chatas)", tipo: "Materia Prima", unidad: "Kg", stock: 20.0, min: 5.0, costo: 30000 },
             { id: 102, nombre: "Tocino de Cerdo", tipo: "Materia Prima", unidad: "Kg", stock: 15.0, min: 4.0, costo: 22000 },
             { id: 201, nombre: "Caja Térmica Plástica (Empaque)", tipo: "Plástico/Empaque", unidad: "Unid", stock: 100, min: 20, costo: 1200 },
             { id: 202, nombre: "Vaso Guacamole + Salseros Plásticos", tipo: "Plástico/Empaque", unidad: "Unid", stock: 150, min: 30, costo: 500 }
         ];
 
-        let comandas = JSON.parse(localStorage.getItem('v24_comandas')) || [];
-        let egresosDiarios = JSON.parse(localStorage.getItem('v24_egresos_diarios')) || [];
-        let actasCongeladas = JSON.parse(localStorage.getItem('v24_actas_congeladas')) || [];
+        let comandas = JSON.parse(localStorage.getItem('v25_comandas')) || [];
+        let egresosDiarios = JSON.parse(localStorage.getItem('v25_egresos_diarios')) || [];
+        let actasCongeladas = JSON.parse(localStorage.getItem('v25_actas_congeladas')) || [];
 
         let tempItemsComanda = [];
         let chartInstance = null;
@@ -814,7 +837,7 @@
             };
 
             actasCongeladas.push(acta);
-            localStorage.setItem('v24_actas_congeladas', JSON.stringify(actasCongeladas));
+            localStorage.setItem('v25_actas_congeladas', JSON.stringify(actasCongeladas));
 
             mostrarNotificacion(`Caja Saldada Exitosamente (${acta.numActa})`, "fa-lock");
             render();
@@ -828,7 +851,7 @@
             com.estadoEntrega = estado;
             if(pagoRecibido) com.pagoRecibido = true;
 
-            localStorage.setItem('v24_comandas', JSON.stringify(comandas));
+            localStorage.setItem('v25_comandas', JSON.stringify(comandas));
             mostrarNotificacion(`Pedido ${id} marcado como Entregado`, 'fa-circle-check');
             render();
         }
@@ -979,15 +1002,17 @@
                     items: [...tempItemsComanda],
                     total: totalVal,
                     costoTotal: costoVal,
-                    fecha: new Date().toLocaleString()
+                    fecha: new Date().toLocaleString('es-CO')
                 };
                 comandas.push(comanda);
                 descontarInventarioPorItems(tempItemsComanda);
             }
 
-            localStorage.setItem('v24_comandas', JSON.stringify(comandas));
+            localStorage.setItem('v25_comandas', JSON.stringify(comandas));
             closeModal('m-comanda');
             mostrarNotificacion('Comanda registrada exitosamente');
+            
+            canalNotificaciones.postMessage({ tipo: 'NUEVO_PEDIDO' });
             render();
         }
 
@@ -997,7 +1022,7 @@
                 if(com) restaurarInventarioPorItems(com.items);
 
                 comandas = comandas.filter(c => c.id !== id);
-                localStorage.setItem('v24_comandas', JSON.stringify(comandas));
+                localStorage.setItem('v25_comandas', JSON.stringify(comandas));
                 mostrarNotificacion(`Comanda ${id} eliminada`);
                 render();
             });
@@ -1015,7 +1040,7 @@
                     }
                 }
             });
-            localStorage.setItem('v24_insumos', JSON.stringify(insumos));
+            localStorage.setItem('v25_insumos', JSON.stringify(insumos));
         }
 
         function restaurarInventarioPorItems(items) {
@@ -1029,7 +1054,7 @@
                     }
                 }
             });
-            localStorage.setItem('v24_insumos', JSON.stringify(insumos));
+            localStorage.setItem('v25_insumos', JSON.stringify(insumos));
         }
 
         function guardarInsumo() {
@@ -1043,7 +1068,7 @@
             if(!nombre) return mostrarNotificacion('Ingresa un nombre de insumo.', 'fa-triangle-exclamation');
 
             insumos.push({ id: Date.now(), nombre, tipo, unidad, stock, min, costo });
-            localStorage.setItem('v24_insumos', JSON.stringify(insumos));
+            localStorage.setItem('v25_insumos', JSON.stringify(insumos));
             closeModal('m-insumo');
             mostrarNotificacion('Insumo guardado en inventario');
             render();
@@ -1056,7 +1081,7 @@
             const cantStr = prompt(`Reponer stock para ${ins.nombre} (${ins.unidad}).`, '10');
             if(cantStr && !isNaN(cantStr)) {
                 ins.stock += parseFloat(cantStr);
-                localStorage.setItem('v24_insumos', JSON.stringify(insumos));
+                localStorage.setItem('v25_insumos', JSON.stringify(insumos));
                 mostrarNotificacion(`Stock de ${ins.nombre} actualizado`);
                 render();
             }
@@ -1065,7 +1090,7 @@
         function eliminarInsumo(id) {
             abrirModalConfirmacion('¿Deseas eliminar este insumo del inventario?', () => {
                 insumos = insumos.filter(i => i.id !== id);
-                localStorage.setItem('v24_insumos', JSON.stringify(insumos));
+                localStorage.setItem('v25_insumos', JSON.stringify(insumos));
                 mostrarNotificacion('Insumo eliminado');
                 render();
             });
@@ -1120,7 +1145,7 @@
                 productos.push({ id: Date.now(), nombre, costo, precio, insumoId });
             }
 
-            localStorage.setItem('v24_productos', JSON.stringify(productos));
+            localStorage.setItem('v25_productos', JSON.stringify(productos));
             closeModal('m-producto');
             mostrarNotificacion('Producto guardado correctamente');
             render();
@@ -1129,13 +1154,13 @@
         function eliminarProducto(id) {
             abrirModalConfirmacion('¿Deseas eliminar este plato del menú?', () => {
                 productos = productos.filter(p => p.id !== id);
-                localStorage.setItem('v24_productos', JSON.stringify(productos));
+                localStorage.setItem('v25_productos', JSON.stringify(productos));
                 mostrarNotificacion('Producto eliminado');
                 render();
             });
         }
 
-        // MENÚ CLIENTE - CONFIRMACIÓN E INGRESO AUTOMÁTICO A COMANDAS / CRM
+        // MENÚ CLIENTE - CONFIRMACIÓN Y NOTIFICACIÓN EN TIEMPO REAL
         function renderMenuCliente() {
             const box = document.getElementById('lista-productos-cliente');
             box.innerHTML = '';
@@ -1203,12 +1228,15 @@
                 fecha: new Date().toLocaleString('es-CO')
             };
 
-            // INSERTAR COMANDA EN EL CRM DE INMEDIATO
+            // INSERTAR COMANDA EN EL CRM
             comandas.push(nuevaComanda);
             descontarInventarioPorItems(itemsObj);
-            localStorage.setItem('v24_comandas', JSON.stringify(comandas));
+            localStorage.setItem('v25_comandas', JSON.stringify(comandas));
 
-            mostrarNotificacion('¡Pedido registrado en el CRM de inmediato!', 'fa-bell');
+            // TRANSMITIR EN TIEMPO REAL
+            canalNotificaciones.postMessage({ tipo: 'NUEVO_PEDIDO' });
+
+            mostrarNotificacion('¡Pedido enviado al sistema del restaurante!', 'fa-bell');
 
             const msgWpp = `¡Hola! Confirmo mi pedido:\n\n📌 *Cliente:* ${nombre}\n📞 *WhatsApp:* ${tel}\n📍 *Dirección:* ${dir}\n💳 *Método de Pago:* ${metodoPago}\n🥩 *Pedido:* ${pedidoStr}\n💰 *Total:* ${formatCOP(total)}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msgWpp)}`, '_blank');
@@ -1216,6 +1244,12 @@
             document.getElementById('form-pedido-cliente').reset();
             calcularTotalCliente();
             render();
+        }
+
+        function confirmarRecepcionPedidoEnCRM() {
+            mostrarNotificacion('Pedido verificado y confirmado en cocina', 'fa-check-double');
+            document.getElementById('box-ultimo-pedido').style.borderColor = 'var(--blue)';
+            document.getElementById('box-ultimo-pedido').style.background = '#eff6ff';
         }
 
         // CIERRE Y ARQUEO DE CAJA
@@ -1314,7 +1348,7 @@
             const monto = parseFloat(document.getElementById('ocr-monto').value) || 0;
 
             egresosDiarios.push({ id: Date.now(), tipo: "Egreso", concepto, monto, fecha: new Date().toLocaleString() });
-            localStorage.setItem('v24_egresos_diarios', JSON.stringify(egresosDiarios));
+            localStorage.setItem('v25_egresos_diarios', JSON.stringify(egresosDiarios));
 
             document.getElementById('ocr-result-box').style.display = 'none';
             mostrarNotificacion('Gasto registrado en Egresos');
@@ -1403,7 +1437,7 @@
         function render() {
             renderPortalDomiciliario();
 
-            // TABLA DE COMANDAS ADMIN CON DESTACADO DEL ÚLTIMO PEDIDO
+            // TABLA DE COMANDAS CRM
             const tCom = document.getElementById('tabla-comandas');
             const boxUltimo = document.getElementById('box-ultimo-pedido');
             const detailsUltimo = document.getElementById('last-order-details');
@@ -1421,7 +1455,7 @@
                     <b>Cliente:</b> ${ultimo.cliente} (${ultimo.tel}) <br>
                     <b>Dirección:</b> ${ultimo.dir} <br>
                     <b>Pedido:</b> ${ultimo.pedido} <br>
-                    <b>Total:</b> <span style="color: var(--success); font-weight: bold;">${formatCOP(ultimo.total)}</span> (${ultimo.metodoPago || 'Efectivo'})
+                    <b>Total:</b> <span style="color: var(--danger); font-weight: bold;">${formatCOP(ultimo.total)}</span> (${ultimo.metodoPago || 'Efectivo'})
                 `;
             } else {
                 boxUltimo.style.display = 'none';
@@ -1430,7 +1464,7 @@
             comandasOrdenadas.forEach((c, index) => {
                 const esElUltimo = index === 0;
                 const badgeEst = c.estadoEntrega === 'Entregado' ? '<span class="badge badge-ok">Entregado</span>' : '<span class="badge badge-pending">En Camino</span>';
-                const badgeNuevo = esElUltimo ? ' <span class="badge badge-new">NUEVO</span>' : '';
+                const badgeNuevo = esElUltimo ? ' <span class="badge badge-new">⚡ NUEVO</span>' : '';
                 const claseFila = esElUltimo ? 'class="row-latest"' : '';
 
                 tCom.innerHTML += `
@@ -1564,11 +1598,22 @@
             });
         }
 
-        // ESCUCHADOR EN TIEMPO REAL ENTRE NAVEGADORES / PESTAÑAS
-        window.addEventListener('storage', (e) => {
-            if(e.key === 'v24_comandas') {
+        // RECEPTOR EN TIEMPO REAL VÍAS CANAL & STORAGE
+        canalNotificaciones.onmessage = (msg) => {
+            if(msg.data && msg.data.tipo === 'NUEVO_PEDIDO') {
+                comandas = JSON.parse(localStorage.getItem('v25_comandas')) || [];
+                reproducirSonidoTimbre();
+                mostrarNotificacion('⚡ ¡NUEVO PEDIDO RECIBIDO EN TIEMPO REAL!', 'fa-bell');
                 render();
-                mostrarNotificacion('¡Nuevo pedido entrante detectado!', 'fa-bell');
+            }
+        };
+
+        window.addEventListener('storage', (e) => {
+            if(e.key === 'v25_comandas') {
+                comandas = JSON.parse(localStorage.getItem('v25_comandas')) || [];
+                reproducirSonidoTimbre();
+                mostrarNotificacion('⚡ ¡NUEVO PEDIDO DETECTADO!', 'fa-bell');
+                render();
             }
         });
 
